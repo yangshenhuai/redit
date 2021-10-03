@@ -10,6 +10,7 @@ import {
   __redisttl__,
   __sessionsecret__,
   __uiurl__,
+  __whitelisturl__,
 } from "./constants";
 import express from "express";
 import cors from "cors";
@@ -44,7 +45,15 @@ const main = async () => {
     ],
     credentials: true,
     methods: "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE",
-    origin: __uiurl__,
+    // origin: __uiurl__,
+    origin: (origin ,callback) => {
+      
+      if(__whitelisturl__.indexOf(origin as string) !== -1 || !origin) {
+        callback(null,true)
+      } else {
+        callback(new Error('this url is not allowed by CORS'))
+      }
+    },
     preflightContinue: false,
   };
 

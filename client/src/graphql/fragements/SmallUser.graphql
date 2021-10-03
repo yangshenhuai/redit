@@ -1,0 +1,4 @@
+fragment SmallUser on User {
+    id
+    username
+}
