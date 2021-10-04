@@ -8,6 +8,8 @@ import { InputField } from "../components/InputField";
 import { useRegisterMutation } from "../generated/graphql";
 import { toErrorMap } from "../utils/toErrorMaps";
 import { useRouter } from "next/dist/client/router";
+import { withUrqlClient } from "next-urql";
+import { createUrqlClient } from "../utils/createUrqlClient";
 
 interface registerProps {}
 
@@ -26,6 +28,7 @@ const Register: React.FC<registerProps> = ({}) => {
           const response = await register(values);
           if(response.data?.register?.errors){
             const errMap = toErrorMap(response.data?.register?.errors)
+            console.error("fail to register " + errMap)
             setErrors(errMap) 
           } else if(response.data?.register.user){
             rounter.push('/')
@@ -63,4 +66,4 @@ const Register: React.FC<registerProps> = ({}) => {
   );
 };
 
-export default Register;
+export default withUrqlClient(createUrqlClient)  (Register);
