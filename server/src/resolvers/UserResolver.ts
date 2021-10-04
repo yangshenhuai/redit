@@ -3,6 +3,7 @@ import { User } from "../entities/User";
 import { MyContext } from "src/types";
 import { Resolver, Ctx ,Arg, Field ,Mutation,InputType,ObjectType, Query} from "type-graphql";
 import argon2 from "argon2"
+import { __cookiename__ } from "../constants";
 
 
 @InputType()
@@ -113,6 +114,24 @@ export class UserResolver {
         req.session.userId = user.id
       
         return {user};
+    }
+
+    @Mutation(() => Boolean)
+    logout(
+        @Ctx() {req,res} : MyContext
+    ) {
+        res.clearCookie(__cookiename__)
+        return new Promise(resolve =>  req.session.destroy(err=>{
+            
+            if(err){
+                console.error("fail to logout",err)
+                resolve(false)
+                return 
+            }
+
+            resolve(true) ;         
+            return 
+        }))
     }
 
 

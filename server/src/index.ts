@@ -2,6 +2,7 @@ import "reflect-metadata";
 import { MikroORM } from "@mikro-orm/core";
 import config from "./mikro-orm.config";
 import {
+  __cookiename__,
   __dbname__,
   __prod__,
   __redishost__,
@@ -61,7 +62,7 @@ const main = async () => {
 
   app.use(
     session({
-      name: "sid",
+      name: __cookiename__,
       store: new RedisStore({ client: redisClient, ttl: __redisttl__ }),
       cookie: {
         httpOnly: true,

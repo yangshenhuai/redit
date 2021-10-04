@@ -26,7 +26,6 @@ const Register: React.FC<registerProps> = ({}) => {
           const response = await register(values);
           if(response.data?.register?.errors){
             const errMap = toErrorMap(response.data?.register?.errors)
-            console.info(errMap)
             setErrors(errMap) 
           } else if(response.data?.register.user){
             rounter.push('/')

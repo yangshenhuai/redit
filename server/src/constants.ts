@@ -14,3 +14,4 @@ export const __redisttl__ = process.env.REDIS_TTL ? Number(process.env.REDIS_TTL
 export const __sessionsecret__ = process.env.SESSION_SECRET ?? 'asdfalsrtuidvkjrtydyvdsqew[to;jdcv;fdg'
 export const __uiurl__ = process.env.UI_URL ?? 'http://localhost:3000'
 export const __whitelisturl__ = process.env.WHITE_LIST_URL ? JSON.parse(process.env.WHITE_LIST_URL) : ['http://localhost:3000','https://studio.apollographql.com']
+export const __cookiename__ = 'sid'
