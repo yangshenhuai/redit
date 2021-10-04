@@ -21,6 +21,9 @@ export class User {
   @Property({columnType: "text",unique: true})
   username!: string;
 
+  @Field()
+  @Property({columnType: "text",unique: true})
+  email!: string;
 
   @Property({columnType: "text"})
   password!: string;

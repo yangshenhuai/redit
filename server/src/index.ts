@@ -1,29 +1,28 @@
-import "reflect-metadata";
 import { MikroORM } from "@mikro-orm/core";
-import config from "./mikro-orm.config";
+import { ApolloServer } from "apollo-server-express";
+import connectRedis from "connect-redis";
+import cors from "cors";
+import express from "express";
+import session from "express-session";
+import redis from "redis";
+import "reflect-metadata";
+import { buildSchema } from "type-graphql";
 import {
   __cookiename__,
-  __dbname__,
   __prod__,
   __redishost__,
   __redispassword__,
   __redisport__,
   __redisttl__,
   __sessionsecret__,
-  __uiurl__,
   __whitelisturl__,
 } from "./constants";
-import express from "express";
-import cors from "cors";
-import { ApolloServer } from "apollo-server-express";
-import { buildSchema } from "type-graphql";
+import config from "./mikro-orm.config";
 import { HelloResolver } from "./resolvers/HelloResolver";
 import { PostResolver } from "./resolvers/PostResolver";
 import { UserResolver } from "./resolvers/UserResolver";
-import redis from "redis";
-import session from "express-session";
-import connectRedis from "connect-redis";
 import { MyContext } from "./types";
+import { sendEmail } from "./util/sendMail";
 
 const main = async () => {
   const orm = await MikroORM.init(config);
@@ -35,7 +34,6 @@ const main = async () => {
     password: __redispassword__,
   });
   const app = express();
-
   const corsOptions: cors.CorsOptions = {
     allowedHeaders: [
       "Origin",
@@ -47,17 +45,20 @@ const main = async () => {
     credentials: true,
     methods: "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE",
     // origin: __uiurl__,
-    origin: (origin ,callback) => {
-      
-      if(__whitelisturl__.indexOf(origin as string) !== -1 || !origin) {
-        callback(null,true)
+    origin: (origin, callback) => {
+      if (__whitelisturl__.indexOf(origin as string) !== -1 || !origin) {
+        callback(null, true);
       } else {
-        callback(new Error('this url is not allowed by CORS'))
+        callback(new Error("this url is not allowed by CORS"));
       }
     },
     preflightContinue: false,
   };
-
+  sendEmail(
+    "yagnsh.info@gmail.com",
+    "Hi , this is the message from nodeemail",
+    "Hello there"
+  );
   app.use(cors(corsOptions));
 
   app.use(
