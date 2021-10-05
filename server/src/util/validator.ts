@@ -46,16 +46,21 @@ export const validateRegister = (options: UsernamePasswordInput) => {
     ];
   }
 
-  if (options.password.length <= 3) {
-    return [
-      {
-        field: "password",
-        message: "length must be greater 3 letters",
-      },
-    ];
-  }
-  return null;
+  return validatePassword(options.password)
 };
+
+
+export function validatePassword(password:string)  {
+    if(password.length <=3) {
+      return [
+        {
+          field: "password",
+          message: "length must be greater 3 letters",
+        },
+      ];
+    }
+    return null;
+}
 
 function validateEmail(email: string): boolean {
   const pattern = new RegExp(

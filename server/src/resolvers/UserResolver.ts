@@ -10,10 +10,15 @@ import {
   Query,
 } from "type-graphql";
 import argon2 from "argon2";
-import { __cookiename__, __uiurl__ } from "../constants";
-import  UsernamePasswordInput  from "../util/UsernamePasswordInput";
-import { validateRegister } from "../util/validator";
-// import { sendEmail } from "src/util/sendMail";
+import {
+  FORGET_PASSWORD_PREFIX,
+  __cookiename__,
+  __uiurl__,
+} from "../constants";
+import UsernamePasswordInput from "../util/UsernamePasswordInput";
+import { validatePassword, validateRegister } from "../util/validator";
+import { sendEmail } from "../util/sendMail";
+import { v4 } from "uuid";
 
 @ObjectType()
 class FieldError {
@@ -32,6 +37,14 @@ class UserResponse {
   user?: User;
 }
 
+@ObjectType()
+class ValidateResponse {
+  @Field(() => [FieldError], { nullable: true })
+  errors?: FieldError[];
+  @Field(() => String, { nullable: true })
+  userid?: string;
+}
+
 @Resolver()
 export class UserResolver {
   @Query(() => User, { nullable: true })
@@ -47,15 +60,15 @@ export class UserResolver {
     @Arg("options") options: UsernamePasswordInput,
     @Ctx() { orm, req }: MyContext
   ): Promise<UserResponse> {
-    const errors = validateRegister(options)
-    if(errors){
-        return {errors}
+    const errors = validateRegister(options);
+    if (errors) {
+      return { errors };
     }
     const hashedPasswd = await argon2.hash(options.password);
     const user = orm.em.create(User, {
       username: options.username,
       password: hashedPasswd,
-      email : options.email
+      email: options.email,
     });
     try {
       await orm.em.persistAndFlush(user);
@@ -63,10 +76,10 @@ export class UserResolver {
       if (err.code == "23505") {
         //duplicate user
         let errorField;
-        if( err.message.includes('user_email_unique')){
-            errorField = "email"
+        if (err.message.includes("user_email_unique")) {
+          errorField = "email";
         } else {
-            errorField = "username"
+          errorField = "username";
         }
 
         return {
@@ -79,7 +92,7 @@ export class UserResolver {
         };
       }
     }
-    
+
     req.session.userId = user.id;
 
     return { user };
@@ -99,7 +112,9 @@ export class UserResolver {
     );
     if (!user) {
       return {
-        errors: [{ field: "usernameOrEmail", message: "the account not exists" }],
+        errors: [
+          { field: "usernameOrEmail", message: "the account not exists" },
+        ],
       };
     }
     const valid = await argon2.verify(user.password, password);
@@ -135,17 +150,71 @@ export class UserResolver {
     );
   }
 
-  // @Mutation(() => Boolean)
-  // async forgotPassword( @Arg("email") email:string , @Ctx() { orm }: MyContext) {
-  //     const user = await orm.em.findOne(User,{ email })
-  //     if(!user){
-  //         return true ;
-  //     }
-  //     const subject = "Reset password"
-  //     const token = ""
-      
+  @Mutation(() => Boolean)
+  async forgotPassword(
+    @Arg("email") email: string,
+    @Ctx() { orm, redis }: MyContext
+  ) {
+    const user = await orm.em.findOne(User, { email });
+    if (!user) {
+      return true;
+    }
+    const subject = "Reset password";
+    const token = v4();
+    await redis.set(FORGET_PASSWORD_PREFIX + token, user.id, "ex", 60 * 60);
 
-  //     await sendEmail(email,subject, `<a href="${__uiurl__}/change-password/${token}">`)
-  // }
+    sendEmail(
+      email,
+      subject,
+      `<a href="${__uiurl__}/change-password/${token}">reset password</a>`
+    );
+    return true;
+  }
 
+  @Mutation(() => UserResponse)
+  async resetPassword(
+    @Arg("userid") userid: string,
+    @Arg("password") password: string,
+    @Ctx() { orm ,req }: MyContext
+  ): Promise<UserResponse> {
+    const errors = validatePassword(password);
+    if (errors) {
+      return { errors: errors };
+    }
+    const user = await orm.em.findOne(User, { id: +userid });
+    if (user == null) {
+      return {
+        errors: [
+          {
+            field: "userid",
+            message: "user not exists",
+          },
+        ],
+      };
+    }
+    user.password = await argon2.hash(password);
+    orm.em.flush();
+    req.session.userId = user.id;
+    return { user: user };
+  }
+
+  @Query(() => ValidateResponse)
+  async validateResetPasswordToken(
+    @Arg("token") token: string,
+    @Ctx() { redis }: MyContext
+  ): Promise<ValidateResponse> {
+
+    const userId = await redis.get(FORGET_PASSWORD_PREFIX + token);
+    if (userId == null) {
+      return {
+        errors: [
+          {
+            field: "password",
+            message: "invalid token, can not reset password",
+          },
+        ],
+      };
+    }
+    return { userid: userId };
+  }
 }

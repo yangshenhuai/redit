@@ -61,6 +61,10 @@ export const createUrqlClient = (ssrExchange: any) => ({
         },
 
       },
+      keys: {
+        ValidateResponse: ()=> null,
+        FieldError: () => null,
+      }
     }),
     ssrExchange,
     fetchExchange,

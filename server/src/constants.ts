@@ -15,3 +15,4 @@ export const __sessionsecret__ = process.env.SESSION_SECRET ?? 'asdfalsrtuidvkjr
 export const __uiurl__ = process.env.UI_URL ?? 'http://localhost:3000'
 export const __whitelisturl__ = process.env.WHITE_LIST_URL ? JSON.parse(process.env.WHITE_LIST_URL) : ['http://localhost:3000','https://studio.apollographql.com']
 export const __cookiename__ = 'sid'
+export const FORGET_PASSWORD_PREFIX = 'forget_password:'
