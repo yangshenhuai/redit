@@ -1,10 +1,13 @@
 import { MikroORM } from "@mikro-orm/core";
 import { ApolloServer } from "apollo-server-express";
-import connectRedis from "connect-redis";
+
 import cors from "cors";
 import express from "express";
 import session from "express-session";
-import redis from "redis";
+import connectRedis from "connect-redis";
+
+
+import Redis from "ioredis"
 import "reflect-metadata";
 import { buildSchema } from "type-graphql";
 import {
@@ -26,13 +29,15 @@ import { sendEmail } from "./util/sendMail";
 
 const main = async () => {
   const orm = await MikroORM.init(config);
+
+  
   //await orm.getMigrator().up().catch( e  => console.warn('migration up failed')); //in case we run the up with the mikro orm cli
-  const RedisStore = connectRedis(session);
-  const redisClient = redis.createClient({
+  const redis = new Redis({
     port: __redisport__,
     host: __redishost__,
     password: __redispassword__,
-  });
+  }) ;
+  const RedisStore = connectRedis(session);
   const app = express();
   const corsOptions: cors.CorsOptions = {
     allowedHeaders: [
@@ -64,7 +69,7 @@ const main = async () => {
   app.use(
     session({
       name: __cookiename__,
-      store: new RedisStore({ client: redisClient, ttl: __redisttl__ }),
+      store:  new RedisStore({ client: redis , ttl: __redisttl__ }),
       cookie: {
         httpOnly: true,
         maxAge: 1000 * 60 * 60 * 24 * 7,
@@ -87,7 +92,7 @@ const main = async () => {
       resolvers: [HelloResolver, PostResolver, UserResolver],
       validate: false,
     }),
-    context: ({ req, res }): MyContext => ({ orm: orm, req, res }),
+    context: ({ req, res  }): MyContext => ({ orm: orm, req, res , redis}),
   });
   await gsqlserver.start();
   gsqlserver.applyMiddleware({ app, cors: false });

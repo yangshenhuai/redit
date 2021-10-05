@@ -10,9 +10,10 @@ import {
   Query,
 } from "type-graphql";
 import argon2 from "argon2";
-import { __cookiename__ } from "../constants";
+import { __cookiename__, __uiurl__ } from "../constants";
 import  UsernamePasswordInput  from "../util/UsernamePasswordInput";
 import { validateRegister } from "../util/validator";
+// import { sendEmail } from "src/util/sendMail";
 
 @ObjectType()
 class FieldError {
@@ -133,4 +134,18 @@ export class UserResolver {
       })
     );
   }
+
+  // @Mutation(() => Boolean)
+  // async forgotPassword( @Arg("email") email:string , @Ctx() { orm }: MyContext) {
+  //     const user = await orm.em.findOne(User,{ email })
+  //     if(!user){
+  //         return true ;
+  //     }
+  //     const subject = "Reset password"
+  //     const token = ""
+      
+
+  //     await sendEmail(email,subject, `<a href="${__uiurl__}/change-password/${token}">`)
+  // }
+
 }
