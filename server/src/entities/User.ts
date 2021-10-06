@@ -1,6 +1,7 @@
-import { Entity, PrimaryKey, Property, } from "@mikro-orm/core";
+import { Collection, Entity, OneToMany, PrimaryKey, Property, } from "@mikro-orm/core";
 
 import { ObjectType ,Field , Int} from "type-graphql"
+import { Posts } from "./Posts";
 
 @Entity()
 @ObjectType() 
@@ -27,6 +28,9 @@ export class User {
 
   @Property({columnType: "text"})
   password!: string;
+
+  @OneToMany(() => Posts, posts => posts.user)
+  posts = new Collection<Posts>(this);
 
 
 }
