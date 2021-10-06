@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Form, Formik } from "formik";
 
 import { Box , Flex } from "@chakra-ui/layout";
@@ -10,19 +10,35 @@ import { toErrorMap } from "../utils/toErrorMaps";
 import { useRouter } from "next/dist/client/router";
 import { withUrqlClient } from "next-urql";
 import { createUrqlClient } from "../utils/createUrqlClient";
-import { Link } from "@chakra-ui/react";
+import { Alert, AlertIcon, Link } from "@chakra-ui/react";
 import NextLink from "next/link";
 
 
-interface registerProps {}
+
 
 
 
 const Login: React.FC<{}> = ({}) => {
-  const rounter = useRouter()
+  
+const [message,setMessage] = useState("")
 
-  const [, login] = useLoginMutation()
+const router = useRouter()
+const [, login] = useLoginMutation()
+console.info("the router.query is " + router.query)
+console.info("the router.query is " + router.query["from"])
 
+useEffect( () => {
+  if(router.query["from"]){
+    if (router.query["from"] == 'createPost') {
+      setMessage("please login to create the post")
+    }
+  } 
+})
+  
+  
+  
+
+  
   return (
     <Wrapper varient="small">
       <Formik
@@ -31,16 +47,22 @@ const Login: React.FC<{}> = ({}) => {
           const response = await login( values );
           if(response.data?.login?.errors){
             const errMap = toErrorMap(response.data?.login?.errors)
-            console.info(errMap)
             setErrors(errMap) 
           } else if(response.data?.login.user){
-            rounter.push('/')
+            router.push('/')
           }
           
         }}
       >
         {({ isSubmitting }) => (
           <Form>
+            {message ? <Box mb={5}>
+            <Alert  status="warning">
+              <AlertIcon />
+              { message}
+            </Alert>
+              </Box> : <></>}
+            
             <InputField
               name="usernameOrEmail"
               placeholder="username or email"
@@ -74,4 +96,4 @@ const Login: React.FC<{}> = ({}) => {
   );
 };
 
-export default withUrqlClient(createUrqlClient) (Login);
+export default withUrqlClient(createUrqlClient,{ssr:false}) (Login);
