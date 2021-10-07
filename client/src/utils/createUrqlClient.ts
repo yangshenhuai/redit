@@ -26,6 +26,9 @@ export const createUrqlClient = (ssrExchange: any) => ({
 
       updates: {
         Mutation: {
+          createPost: (_result, args, cache, info) => {
+            cache.invalidate("Query","posts",{limit:10,offset:0})
+          },
           logout: (_result, args, cache, info) => {
             updateQuery<LogoutMutation, MeQuery>(
               cache,
@@ -66,6 +69,7 @@ export const createUrqlClient = (ssrExchange: any) => ({
               }
             );
           },
+          
         },
 
       },

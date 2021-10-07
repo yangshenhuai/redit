@@ -1,4 +1,4 @@
-import { Collection, Entity, OneToMany, PrimaryKey, Property, } from "@mikro-orm/core";
+import { Collection, Entity, ManyToMany, OneToMany, PrimaryKey, Property, } from "@mikro-orm/core";
 
 import { ObjectType ,Field , Int} from "type-graphql"
 import { Posts } from "./Posts";
@@ -31,6 +31,9 @@ export class User {
 
   @OneToMany(() => Posts, posts => posts.user)
   posts = new Collection<Posts>(this);
+
+  @ManyToMany(() => Posts , post => post.upvoter)
+  upvoted = new Collection<Posts>(this)
 
 
 }

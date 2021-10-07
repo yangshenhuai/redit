@@ -30,6 +30,7 @@ export type Mutation = {
   register: UserResponse;
   resetPassword: UserResponse;
   updatePost: Posts;
+  upvote: Scalars['Boolean'];
 };
 
 
@@ -70,6 +71,11 @@ export type MutationUpdatePostArgs = {
   title?: Maybe<Scalars['String']>;
 };
 
+
+export type MutationUpvoteArgs = {
+  postId: Scalars['Int'];
+};
+
 export type PostInput = {
   text: Scalars['String'];
   title: Scalars['String'];
@@ -79,7 +85,7 @@ export type Posts = {
   __typename?: 'Posts';
   createAt: Scalars['String'];
   id: Scalars['Int'];
-  point: Scalars['String'];
+  point: Scalars['Float'];
   text: Scalars['String'];
   textSnippet: Scalars['String'];
   title: Scalars['String'];
@@ -146,7 +152,7 @@ export type CreatePostMutationVariables = Exact<{
 }>;
 
 
-export type CreatePostMutation = { __typename?: 'Mutation', createPost: { __typename?: 'Posts', id: number, title: string, text: string, point: string, createAt: string, upateAt: string } };
+export type CreatePostMutation = { __typename?: 'Mutation', createPost: { __typename?: 'Posts', id: number, title: string, text: string, point: number, createAt: string, upateAt: string } };
 
 export type ForgotPasswordMutationVariables = Exact<{
   email: Scalars['String'];
@@ -183,6 +189,13 @@ export type ResetPasswordMutationMutationVariables = Exact<{
 
 export type ResetPasswordMutationMutation = { __typename?: 'Mutation', resetPassword: { __typename?: 'UserResponse', errors?: Array<{ __typename?: 'FieldError', field: string, message: string }> | null | undefined, user?: { __typename?: 'User', id: number, username: string } | null | undefined } };
 
+export type UpvoteMutationVariables = Exact<{
+  upvotePostId: Scalars['Int'];
+}>;
+
+
+export type UpvoteMutation = { __typename?: 'Mutation', upvote: boolean };
+
 export type MeQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -194,7 +207,7 @@ export type PostsQueryVariables = Exact<{
 }>;
 
 
-export type PostsQuery = { __typename?: 'Query', posts: Array<{ __typename?: 'Posts', id: number, title: string, textSnippet: string, point: string, createAt: string, upateAt: string, user: { __typename?: 'User', id: number, username: string } }> };
+export type PostsQuery = { __typename?: 'Query', posts: Array<{ __typename?: 'Posts', id: number, title: string, textSnippet: string, point: number, createAt: string, upateAt: string, user: { __typename?: 'User', id: number, username: string } }> };
 
 export type ValidateResetPasswordTokenQueryVariables = Exact<{
   token: Scalars['String'];
@@ -294,6 +307,15 @@ export const ResetPasswordMutationDocument = gql`
 
 export function useResetPasswordMutationMutation() {
   return Urql.useMutation<ResetPasswordMutationMutation, ResetPasswordMutationMutationVariables>(ResetPasswordMutationDocument);
+};
+export const UpvoteDocument = gql`
+    mutation Upvote($upvotePostId: Int!) {
+  upvote(postId: $upvotePostId)
+}
+    `;
+
+export function useUpvoteMutation() {
+  return Urql.useMutation<UpvoteMutation, UpvoteMutationVariables>(UpvoteDocument);
 };
 export const MeDocument = gql`
     query Me {

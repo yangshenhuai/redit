@@ -104,4 +104,23 @@ export class PostResolver {
     await orm.em.nativeDelete(Posts, { id });
     return true;
   }
+
+
+  @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
+  async upvote(
+    @Arg("postId" , () => Int!) id: number,
+    @Ctx() { req,orm }: MyContext
+  ){
+    const em = orm.em.fork()
+    let userId = req.session.userId;
+    const post = await orm.em.findOne(Posts,{id})
+    if(!post){
+      return false;
+    }
+    post.upvoter.add(em.getReference<User>(User,userId as number))
+    post.point = post.point + 1   
+    await em.persistAndFlush(post)
+    return true;
+  }
 }

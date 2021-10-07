@@ -1,4 +1,4 @@
-import { Entity, ManyToOne, PrimaryKey, Property } from "@mikro-orm/core";
+import { Collection, Entity, ManyToMany, ManyToOne, PrimaryKey, Property } from "@mikro-orm/core";
 
 import { ObjectType, Field, Int } from "type-graphql";
 import { User } from "./User";
@@ -20,11 +20,15 @@ export class Posts {
 
   @Field()
   @Property({ columnType: "int" , default : 0 })
-  point: string;
+  point: number;
 
   @Field()
   @ManyToOne(() => User)
   user!: User;
+
+
+  @ManyToMany(() => User)
+  upvoter = new Collection<User>(this)
 
 
   @Field(() => String)
