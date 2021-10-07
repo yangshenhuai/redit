@@ -8,6 +8,8 @@ import {
   RegisterMutation,
 } from "../generated/graphql";
 import updateQuery from "./updateQuery";
+import { simplePagination } from '@urql/exchange-graphcache/extras';
+
 
 
 
@@ -16,6 +18,12 @@ export const createUrqlClient = (ssrExchange: any) => ({
   exchanges: [
     dedupExchange,
     cacheExchange({
+      resolvers: {
+         Query: {
+           posts: simplePagination({limitArgument:'limit',offsetArgument:'offset'}),
+         }
+      },
+
       updates: {
         Mutation: {
           logout: (_result, args, cache, info) => {
@@ -73,3 +81,4 @@ export const createUrqlClient = (ssrExchange: any) => ({
     credentials: "include",
   } as const,
 });
+
