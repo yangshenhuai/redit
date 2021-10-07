@@ -22,11 +22,10 @@ export class Posts {
   @Property({ columnType: "int" , default : 0 })
   point: string;
 
+  @Field()
   @ManyToOne(() => User)
   user!: User;
 
-  @ManyToOne(() => User, { mapToPk: true })
-  user_id! : number
 
   @Field(() => String)
   @Property({ type: "date" })

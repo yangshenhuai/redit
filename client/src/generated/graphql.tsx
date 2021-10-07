@@ -81,8 +81,10 @@ export type Posts = {
   id: Scalars['Int'];
   point: Scalars['String'];
   text: Scalars['String'];
+  textSnippet: Scalars['String'];
   title: Scalars['String'];
   upateAt: Scalars['String'];
+  user: User;
 };
 
 export type Query = {
@@ -97,6 +99,12 @@ export type Query = {
 
 export type QueryPostArgs = {
   id: Scalars['Int'];
+};
+
+
+export type QueryPostsArgs = {
+  limit: Scalars['Int'];
+  offset: Scalars['Int'];
 };
 
 
@@ -180,10 +188,13 @@ export type MeQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type MeQuery = { __typename?: 'Query', me?: { __typename?: 'User', id: number, username: string } | null | undefined };
 
-export type PostsQueryVariables = Exact<{ [key: string]: never; }>;
+export type PostsQueryVariables = Exact<{
+  offset: Scalars['Int'];
+  limit: Scalars['Int'];
+}>;
 
 
-export type PostsQuery = { __typename?: 'Query', posts: Array<{ __typename?: 'Posts', id: number, createAt: string, upateAt: string, title: string }> };
+export type PostsQuery = { __typename?: 'Query', posts: Array<{ __typename?: 'Posts', id: number, title: string, textSnippet: string, point: string, createAt: string, upateAt: string, user: { __typename?: 'User', id: number, username: string } }> };
 
 export type ValidateResetPasswordTokenQueryVariables = Exact<{
   token: Scalars['String'];
@@ -296,12 +307,18 @@ export function useMeQuery(options: Omit<Urql.UseQueryArgs<MeQueryVariables>, 'q
   return Urql.useQuery<MeQuery>({ query: MeDocument, ...options });
 };
 export const PostsDocument = gql`
-    query Posts {
-  posts {
+    query Posts($offset: Int!, $limit: Int!) {
+  posts(offset: $offset, limit: $limit) {
     id
+    title
+    textSnippet
+    point
     createAt
     upateAt
-    title
+    user {
+      id
+      username
+    }
   }
 }
     `;

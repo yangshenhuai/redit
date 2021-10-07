@@ -1,8 +1,15 @@
-query Posts {
-  posts {
+query Posts($offset: Int!, $limit: Int!) {
+  posts(offset: $offset, limit: $limit) {
     id
+    title
+    textSnippet
+    point
     createAt
     upateAt
-    title
+    user {
+      id
+      username
+    }
+    
   }
 }
