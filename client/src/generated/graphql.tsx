@@ -24,6 +24,7 @@ export type Mutation = {
   __typename?: 'Mutation';
   createPost: Posts;
   deletePost: Scalars['Boolean'];
+  downvote: Scalars['Boolean'];
   forgotPassword: Scalars['Boolean'];
   login: UserResponse;
   logout: Scalars['Boolean'];
@@ -41,6 +42,11 @@ export type MutationCreatePostArgs = {
 
 export type MutationDeletePostArgs = {
   id: Scalars['Float'];
+};
+
+
+export type MutationDownvoteArgs = {
+  postId: Scalars['Int'];
 };
 
 
@@ -91,6 +97,7 @@ export type Posts = {
   title: Scalars['String'];
   upateAt: Scalars['String'];
   user: User;
+  voteStatus: Scalars['String'];
 };
 
 export type Query = {
@@ -207,7 +214,7 @@ export type PostsQueryVariables = Exact<{
 }>;
 
 
-export type PostsQuery = { __typename?: 'Query', posts: Array<{ __typename?: 'Posts', id: number, title: string, textSnippet: string, point: number, createAt: string, upateAt: string, user: { __typename?: 'User', id: number, username: string } }> };
+export type PostsQuery = { __typename?: 'Query', posts: Array<{ __typename?: 'Posts', id: number, title: string, textSnippet: string, point: number, createAt: string, upateAt: string, voteStatus: string, user: { __typename?: 'User', id: number, username: string } }> };
 
 export type ValidateResetPasswordTokenQueryVariables = Exact<{
   token: Scalars['String'];
@@ -337,6 +344,7 @@ export const PostsDocument = gql`
     point
     createAt
     upateAt
+    voteStatus
     user {
       id
       username

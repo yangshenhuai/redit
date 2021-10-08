@@ -26,6 +26,9 @@ export class Posts {
   @ManyToOne(() => User)
   user!: User;
 
+  @Field()
+  voteStatus: string  //whether it's voted by current user.
+
 
   @ManyToMany(() => User)
   upvoter = new Collection<User>(this)

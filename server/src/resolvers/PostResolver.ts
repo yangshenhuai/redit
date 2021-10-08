@@ -16,9 +16,8 @@ import {
 
 import { User } from "../entities/User";
 import { isAuth } from "../middleware/isAuth";
-import { EntityManager } from "@mikro-orm/postgresql";
-import { getTextSnippet } from "../util/snippet";
 
+import { getTextSnippet } from "../util/snippet";
 
 @InputType()
 class PostInput {
@@ -31,27 +30,55 @@ class PostInput {
 @Resolver(Posts)
 export class PostResolver {
   @FieldResolver()
-  textSnippet(@Root() root : Posts) : string {
-    return getTextSnippet(root.text,60)
+  textSnippet(@Root() root: Posts): string {
+    return getTextSnippet(root.text, 60);
   }
 
   @Query(() => [Posts])
   async posts(
-    @Arg("limit" , () => Int) limit: number,
-    @Arg("offset" , () => Int) offset: number,
-    @Ctx() { orm }: MyContext
+    @Arg("limit", () => Int) limit: number,
+    @Arg("offset", () => Int) offset: number,
+    @Ctx() { orm, req }: MyContext
   ): Promise<Posts[]> {
     const realLimit = Math.min(limit, 100); //protect our backend
-    const entityManager = orm.em.fork() as EntityManager;
+    // const entityManager = orm.em.fork() as EntityManager;
 
-    return await entityManager
-      .createQueryBuilder(Posts)
-      .select(["*"])
-      .leftJoinAndSelect('user','user')
-      .limit(realLimit)
-      .offset(offset)
-      .orderBy({ createAt: "desc" })
-      .execute();
+    // const qb =  entityManager
+    //   .createQueryBuilder(Posts)
+    // .select(["*"])
+    // .leftJoinAndSelect('user','user')
+    // .select()
+    // .limit(realLimit)
+    // .offset(offset)
+    // .orderBy({ createAt: "desc" })
+    // .execute() ;
+    // qb.exe(qb.raw(""))
+    // qb.select(["*"]).
+    console.info("the userid is  " + req.session.userId);
+    const connection = orm.em.getConnection();
+
+    let sql =
+      'select "p"."id" ,"p"."title" ,"p"."text" ,"p"."point" ,"p"."create_at" as "createAt" ,"p"."upate_at" as "upateAt" , json_build_object(\'id\',"u"."id" , \'username\', "u"."username",\'email\',"u"."email") "user"  ';
+
+    if (req.session.userId) {
+      sql =
+        sql +
+        ' , (select count(1) from "posts_upvoter" as "pu" where "pu"."posts_id"= "p"."id" and "pu"."user_id"= ' +
+        req.session.userId +
+        " ) as \"voteStatus\" ";
+    } else {
+      sql =
+        sql + ' , \'0\' as \"voteStatus\" '
+    }
+
+    sql =
+      sql +
+      ' from "posts" as "p" left join "user" as "u" on "p"."user_id" = "u"."id" order by "p"."create_at" desc  offset ' +
+      offset +
+      " limit " +
+      realLimit;
+
+    return await connection.execute(sql);
 
   }
 
@@ -105,22 +132,44 @@ export class PostResolver {
     return true;
   }
 
-
   @Mutation(() => Boolean)
   @UseMiddleware(isAuth)
   async upvote(
-    @Arg("postId" , () => Int!) id: number,
-    @Ctx() { req,orm }: MyContext
-  ){
-    const em = orm.em.fork()
+    @Arg("postId", () => Int!) id: number,
+    @Ctx() { req, orm }: MyContext
+  ) {
+    const em = orm.em.fork();
     let userId = req.session.userId;
-    const post = await orm.em.findOne(Posts,{id})
-    if(!post){
+
+    const post = await em.findOne(Posts, { id });
+    if (!post) {
       return false;
     }
-    post.upvoter.add(em.getReference<User>(User,userId as number))
-    post.point = post.point + 1   
-    await em.persistAndFlush(post)
+    await post.upvoter.init();
+    if (post.upvoter.getIdentifiers().includes(userId as number)) {
+      return false;
+    }
+
+    post.upvoter.add(em.getReference<User>(User, userId as number));
+    post.point = post.point + 1;
+    await em.persistAndFlush(post);
+    return true;
+  }
+
+  @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
+  async downvote(
+    @Arg("postId", () => Int!) id: number,
+    @Ctx() { orm }: MyContext
+  ) {
+    //not use this currently
+    const em = orm.em.fork();
+    const post = await em.findOne(Posts, { id });
+    if (!post) {
+      return false;
+    }
+    post.point = post.point - 1;
+    em.flush();
     return true;
   }
 }

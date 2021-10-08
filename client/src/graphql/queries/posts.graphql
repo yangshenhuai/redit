@@ -6,6 +6,7 @@ query Posts($offset: Int!, $limit: Int!) {
     point
     createAt
     upateAt
+    voteStatus
     user {
       id
       username

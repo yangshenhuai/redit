@@ -24,13 +24,14 @@ const [message,setMessage] = useState("")
 
 const router = useRouter()
 const [, login] = useLoginMutation()
-console.info("the router.query is " + router.query)
-console.info("the router.query is " + router.query["from"])
 
 useEffect( () => {
   if(router.query["from"]){
     if (router.query["from"] == 'createPost') {
       setMessage("please login to create the post")
+    }
+    if (router.query["from"] == 'upvote') {
+      setMessage("please login to upvote the post")
     }
   } 
 })
