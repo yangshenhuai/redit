@@ -27,7 +27,7 @@ export class Posts {
   user!: User;
 
   @Field()
-  voteStatus: string  //whether it's voted by current user.
+  voteStatus?: string  //whether it's voted by current user.
 
 
   @ManyToMany(() => User)

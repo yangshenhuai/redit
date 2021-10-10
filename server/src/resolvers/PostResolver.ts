@@ -54,7 +54,7 @@ export class PostResolver {
     // .execute() ;
     // qb.exe(qb.raw(""))
     // qb.select(["*"]).
-    console.info("the userid is  " + req.session.userId);
+
     const connection = orm.em.getConnection();
 
     let sql =
@@ -87,7 +87,7 @@ export class PostResolver {
     @Arg("id", () => Int) id: number,
     @Ctx() { orm }: MyContext
   ): Promise<Posts | null> {
-    return orm.em.findOne(Posts, { id });
+    return orm.em.findOne(Posts, { id }, ['user'] );
   }
 
   @Mutation(() => Posts)
@@ -124,11 +124,20 @@ export class PostResolver {
   }
 
   @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
   async deletePost(
-    @Arg("id") id: number,
-    @Ctx() { orm }: MyContext
+    @Arg("id" ,() => Int) id: number,
+    @Ctx() { orm ,req }: MyContext
   ): Promise<boolean> {
-    await orm.em.nativeDelete(Posts, { id });
+    const post = await orm.em.findOne(Posts, { id });
+    if (!post){
+      return false;
+    }
+    if(post.user.id != req.session.userId){
+      throw new Error("not authorized!");
+    }
+
+    await orm.em.nativeDelete(Posts, { id  });
     return true;
   }
 

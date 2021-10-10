@@ -27,7 +27,9 @@ export const createUrqlClient = (ssrExchange: any , ctx) => ({
 
       updates: {
         Mutation: {
-
+          deletePost: (_result, args, cache, info) => {
+            cache.invalidate({__typename:'Posts' , id: args.id})
+          },
           upvote: (_result, args, cache, info) => {
 
             const data = cache.readFragment(
@@ -53,9 +55,6 @@ export const createUrqlClient = (ssrExchange: any , ctx) => ({
                 { id: args.postId, point: newPoint , voteStatus : "1" }
               );
             }
-
-  
-
           },
 
           createPost: (_result, args, cache, info) => {

@@ -11,7 +11,6 @@ interface UpvoteProps {
 }
 
 const Upvote: React.FC<UpvoteProps> = ({ id, point , voteStatus }: UpvoteProps) => {
-  console.info("id " + id + " , and point is " +  point  + " and voteStatus is " + voteStatus)
   const [{fetching}, upvote] = useUpvoteMutation();
   const router = useRouter()
   return (

@@ -4,19 +4,21 @@ import {
   Flex,
   Heading,
   Link,
-  Stack,
   Text,
-  Icon,
   IconButton,
 } from "@chakra-ui/react";
+import { DeleteIcon } from "@chakra-ui/icons";
+
 import { withUrqlClient } from "next-urql";
 import NextLink from "next/link";
 import React, { useState } from "react";
 import Layout from "../components/Layout";
-import { usePostsQuery } from "../generated/graphql";
-import { createUrqlClient } from "../utils/createUrqlClient";
-import { ChevronUpIcon, ChevronDownIcon } from "@chakra-ui/icons";
 import Upvote from "../components/Upvote";
+import { usePostsQuery, useDeletePostMutation } from "../generated/graphql";
+import { createUrqlClient } from "../utils/createUrqlClient";
+import { useRouter } from "next/dist/client/router";
+import { useToast } from "@chakra-ui/react"
+
 
 const Index = () => {
   const [pagnationVariables, setPagnationVariables] = useState({
@@ -31,6 +33,12 @@ const Index = () => {
       offset: pagnationVariables.offset,
     },
   });
+  const router = useRouter()
+
+  const [, deletePost] = useDeletePostMutation();
+
+  const toast = useToast()
+
   // const hasMore = false;
 
   if (!data && !fetching) {
@@ -43,28 +51,59 @@ const Index = () => {
 
   return (
     <Layout>
-      <Flex>
-        <Heading>Redit</Heading>
-
-        <NextLink href="/create-post">
-          <Link ml="auto">create post</Link>
-        </NextLink>
-      </Flex>
-
       {!data
         ? null
         : data.posts.map((p) => {
             // <Stack spacing={8} key={p.id}>
 
-            return <Flex p={5} mt={2} key={p.id} shadow="md" borderWidth="1px">
-              <Upvote id={p.id} point={p.point} voteStatus={p.voteStatus} />
-              <Box>
-                <Heading fontSize="xl">{p.title}</Heading>
-                <Text>post by {p.user.username}</Text>
-                <Text mt={4}>{p.textSnippet}</Text>
-              </Box>
-            </Flex>
-            
+            return !p ? null : (
+              <Flex p={5} mt={2} key={p.id} shadow="md" borderWidth="1px">
+                <Upvote id={p.id} point={p.point} voteStatus={p.voteStatus} />
+                <Box flex={1}>
+                  <NextLink
+                    href={{
+                      pathname: "/post/[id]",
+                      query: { id: p.id },
+                    }}
+                  >
+                    <Link>
+                      <Heading fontSize="xl">{p.title}</Heading>
+                    </Link>
+                  </NextLink>
+                  <Text>post by {p.user.username}</Text>
+                  <Flex>
+                    <Text flex={1} mt={4}>
+                      {p.textSnippet}
+                    </Text>
+                    <IconButton
+                      ml="auto"
+                      onClick={async () =>  {
+                        const result =  await deletePost({ postId: p.id });
+                        console.info(result);
+                        if(result.error) {
+                          if(result.error.message.includes('not authenticated')){
+                            router.replace('/')
+                          } 
+                          if(result.error.message.includes('not authorized')){
+                            toast({
+                              title: "Can't remove",
+                              description: "Can't remove other user's post",
+                              status: "error",
+                              duration: 9000,
+                              isClosable: true,
+                            })
+                          }
+                        }
+                        
+                      }}
+                      colorScheme="red"
+                      aria-label="Remove"
+                      icon={<DeleteIcon />}
+                    />
+                  </Flex>
+                </Box>
+              </Flex>
+            );
           })}
 
       {data && hasMore ? (
@@ -88,12 +127,12 @@ const Index = () => {
             m="auto"
             my={8}
           >
-            {" "}
-            load more{" "}
+            load more
           </Button>
         </Flex>
       ) : null}
     </Layout>
   );
 };
+
 export default withUrqlClient(createUrqlClient, { ssr: true })(Index);
